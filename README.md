@@ -43,9 +43,9 @@ csb-validator path/to/file.geojson
 ```bash
 git clone https://github.com/your-org/csb-validator.git
 cd csb-validator
-pip install -r requirements.txt  # optional if aiofiles is not already installed
+pip install -r requirements.txt
 
-```bash
+# Optional Global Access
 chmod +x csb_validator.py
 ln -s $(pwd)/validator.py /usr/local/bin/csb-validator
 ```
