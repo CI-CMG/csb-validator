@@ -19,7 +19,7 @@ csb-validator is a command-line utility designed to validate GeoJSON files conta
 ```bash
 git clone https://github.com/your-org/csb-validator.git
 cd csb-validator
-pip install -r requirements.txt  # optional if aiofiles is not already installed
+pip install -r requirements.txt
 
 ## Optional Global Access
 chmod +x csb_validator.py
