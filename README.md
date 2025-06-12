@@ -54,13 +54,13 @@ ln -s $(pwd)/validator.py /usr/local/bin/csb-validator
 
 ## Usage
 
-### Example: Single File Execution
+### Single File Execution
 
 ```bash
 python validator.py path/to/file.geojson
 ```
 
-### Example: Multi-file Execution
+### Multi-file Execution
 
 ```bash
 python validator.py *.geojson
