@@ -1,9 +1,11 @@
 # csb-validator
-csb-validator is a command-line utility designed to validate GeoJSON files containing crowdsourced bathymetry (CSB) data. It enforces strict data integrity rules to ensure compliance with Crowbar and CSB 3.1 specifications
+csb-validator is a fast, Python-based command-line tool for validating geospatial files, including GeoJSON, XYZ-style JSON, and related formats used in Crowbar. It enforces key data quality rules and is designed to run on many files at once, validating all features asynchronously for efficiency.
 
 
 
 ## What are we validating?
+
+For each Feature in a supported file, the following fields are checked:
 
 | Field       | Requirement                                                               |
 |-------------|---------------------------------------------------------------------------|
@@ -13,6 +15,7 @@ csb-validator is a command-line utility designed to validate GeoJSON files conta
 | `heading`   | Optional, but if present, must be between **0** and **360**               |
 | `time`      | Must be present, ISO 8601 formatted, and **in the past**       
 
+The validator currently expects longitude and latitude in the geometry.coordinates array and other values in the properties object, as typical in GeoJSON and CSB-style JSON.
 
 ## Installation
 
