@@ -1,0 +1,36 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+.venv/
+
+# Packaging files
+*.egg-info/
+dist/
+build/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# macOS system files
+.DS_Store
+
+# VSCode / JetBrains / Sublime
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Test artifacts
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Temporary files
+*.log
+*.tmp
+*.bak
+
