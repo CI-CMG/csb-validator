@@ -98,7 +98,7 @@ async def run_validation(paths: List[str]):
             for index, errs in feature_errors:
                 print(f"  Feature #{index}:")
                 for err in errs:
-                    print(f"    - {err}")
+                    print(f" - {err}")
 
 
 def main():
