@@ -82,7 +82,7 @@ async def run_validation(paths: List[str]):
     tasks = [validate_file(path) for path in paths]
     results = await asyncio.gather(*tasks)
 
-    print("\n📋 Validation Report:\n" + "="*40)
+    print("\n📋 Validation Report:\n" + "=" * 40)
 
     for path, feature_errors, status in results:
         filename = os.path.basename(path)
