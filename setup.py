@@ -9,11 +9,17 @@ setup(
     url="https://github.com/CI-CMG/csb-validator",
     packages=find_packages(),
     install_requires=[
-    "aiofiles"
+        "aiofiles",
+        "fpdf",
+        "colorama"
+        "csbschema"
     ],
+    extras_require={
+        "trusted-node": ["csbschema"]
+    },
     entry_points={
         "console_scripts": [
-            "csb-validator=csb_validator.validator:main", 
+            "csb-validator=csb_validator.validator:main",
         ],
     },
     classifiers=[
