@@ -92,7 +92,7 @@ def run_custom_validation(file_path: str) -> Tuple[str, List[Dict[str, Any]]]:
                     {
                         "file": file_path,
                         "feature": str(line_number),
-                        "error": "Depth is required",
+                        "error": "Depth cannot be blank",
                     }
                 )
 
@@ -123,7 +123,7 @@ def run_custom_validation(file_path: str) -> Tuple[str, List[Dict[str, Any]]]:
                     {
                         "file": file_path,
                         "feature": str(line_number),
-                        "error": "Time is required",
+                        "error": "Timestamp cannot be blank",
                     }
                 )
             else:
