@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import List, Dict, Any, Tuple
 from fpdf import FPDF
 from colorama import Fore, Style, init
+from datetime import datetime, timezone
 
 init(autoreset=True)
 
@@ -94,6 +95,57 @@ def run_custom_validation(file_path: str) -> Tuple[str, List[Dict[str, Any]]]:
                         "error": "Depth is required",
                     }
                 )
+
+            heading = props.get("heading")
+            if heading is not None:
+                try:
+                    heading_val = float(heading)
+                    if heading_val < 0 or heading_val > 360:
+                        errors.append(
+                            {
+                                "file": file_path,
+                                "feature": str(line_number),
+                                "error": f"Heading out of bounds: {heading}",
+                            }
+                        )
+                except ValueError:
+                    errors.append(
+                        {
+                            "file": file_path,
+                            "feature": str(line_number),
+                            "error": f"Heading is not a valid number: {heading}",
+                        }
+                    )
+
+            time_str = props.get("time")
+            if not time_str:
+                errors.append(
+                    {
+                        "file": file_path,
+                        "feature": str(line_number),
+                        "error": "Time is required",
+                    }
+                )
+            else:
+                try:
+                    timestamp = datetime.fromisoformat(time_str.replace("Z", "+00:00"))
+                    now = datetime.now(timezone.utc)
+                    if timestamp > now:
+                        errors.append(
+                            {
+                                "file": file_path,
+                                "feature": str(line_number),
+                                "error": f"Timestamp should be specified in the past: {time_str}",
+                            }
+                        )
+                except Exception:
+                    errors.append(
+                        {
+                            "file": file_path,
+                            "feature": str(line_number),
+                            "error": f"Invalid ISO 8601 time format: {time_str}",
+                        }
+                    )
 
     except Exception as e:
         errors.append(
