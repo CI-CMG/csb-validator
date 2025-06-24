@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="csb_validator",
-    version="2.1.0",
+    version="2.2.0",
     description="Validate CSB (Crowdsourced Bathymetry) GeoJSON and other formats",
     author="Clinton Campbell",
     author_email="clint.campbell@colorado.edu",
