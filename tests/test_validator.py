@@ -1,3 +1,4 @@
+from csb_validator.validator_crowbar import run_custom_validation
 
 import pytest
 from datetime import datetime, timedelta, timezone
@@ -6,10 +7,6 @@ import json
 import os
 import sys
 import os
-
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))) # TODO: clean this up
-from csb_validator.validator import run_custom_validation
-
 
 def create_feature(coords, depth=None, heading=None, time=None):
     return {
