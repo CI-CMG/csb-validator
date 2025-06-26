@@ -59,7 +59,7 @@
         "processing": [
             {
                 "type": "Algorithm",
-                "timestamp": "2025-03-26T17:31:39.196944Z",
+                "timestamp": "203335-03-26T17:31:39.196944Z",
                 "name": "nodatareject",
                 "parameters": {
                     "phase": "raw"
@@ -174,8 +174,8 @@
             "geometry": {
                 "type": "Point",
                 "coordinates": [
-                    -92.94608905073993,
-                    29.708454014846332
+                    1000.1,
+                    29.10000000
                 ]
             },
             "properties": {

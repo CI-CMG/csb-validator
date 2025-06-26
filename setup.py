@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="csb_validator",
-    version="2.2.0",
+    name="csb-validator",
+    version="2.2.1",
     description="Validate CSB (Crowdsourced Bathymetry) GeoJSON and other formats",
     author="Clinton Campbell",
     author_email="clint.campbell@colorado.edu",
@@ -19,7 +19,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "csb-validator=csb_validator.validator:main",
+            "csb-validator=csb_validator.cli:main",
         ],
     },
     classifiers=[
