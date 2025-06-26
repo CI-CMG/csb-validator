@@ -8,15 +8,8 @@ setup(
     author_email="clint.campbell@colorado.edu",
     url="https://github.com/CI-CMG/csb-validator",
     packages=find_packages(),
-    install_requires=[
-        "aiofiles",
-        "fpdf",
-        "colorama",
-        "csbschema"
-    ],
-    extras_require={
-        "trusted-node": ["csbschema"]
-    },
+    install_requires=["aiofiles", "fpdf", "colorama", "csbschema"],
+    extras_require={"trusted-node": ["csbschema"]},
     entry_points={
         "console_scripts": [
             "csb-validator=csb_validator.cli:main",
