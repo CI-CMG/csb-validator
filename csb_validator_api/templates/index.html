@@ -8,10 +8,11 @@
 </head>
 <body class="bg-gray-50 text-gray-800">
   <div class="max-w-5xl mx-auto py-10 px-4">
-    <div class="flex items-center mb-6">
-      <img src="/static/logo.png" alt="CSB Validator Logo" class="h-10 mr-4" />
-      <h1 class="text-3xl font-bold">CSB Validator</h1>
-    </div>
+<div class="flex flex-col items-center justify-center mb-10 text-center">
+  <img src="/static/logo.png" alt="CSB Validator Logo" class="h-12 mb-3" />
+  <h1 class="text-4xl font-bold text-gray-800">CSB Validator</h1>
+  <p class="text-gray-500 mt-1">Validate your CSB files before submission</p>
+</div>
 
     <form id="upload-form" class="bg-white rounded shadow p-6 border border-gray-200" aria-label="Upload form">
       <label for="file-input" class="block mb-2 font-semibold">Upload a .geojson, .xyz or .zip:</label>
@@ -168,7 +169,7 @@
           const row = document.createElement("tr");
           row.className = "border-t hover:bg-gray-50";
           row.innerHTML = `
-            <td class="px-3 py-2">${err.file}</td>
+            <td class="px-3 py-2">${err.file.split("/").pop()}</td>
             <td class="px-3 py-2">${err.line || ""}</td>
             <td class="px-3 py-2">${err.error}</td>`;
           tbody.appendChild(row);
