@@ -71,6 +71,9 @@
     const dropZoneText = document.getElementById("drop-zone-text");
     const fileNameDisplay = document.getElementById("file-name");
 
+    let currentPage = 1;
+    const pageSize = 25;
+
     dropZone.addEventListener("click", () => fileInput.click());
 
     fileInput.addEventListener("change", () => {
@@ -125,8 +128,7 @@
       });
     }
 
-    document.getElementById("upload-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
+    async function fetchResults() {
       const file = fileInput.files[0];
       if (!file) return;
 
@@ -137,8 +139,11 @@
       formData.append("file", file);
       formData.append("mode", document.getElementById("mode").value);
       formData.append("schema_version", document.getElementById("schema_version").value);
+      formData.append("page", currentPage);
+      formData.append("page_size", pageSize);
 
       updateProgressBar(50);
+
       const res = await fetch("/validate", {
         method: "POST",
         body: formData,
@@ -151,6 +156,10 @@
       updateProgressBar(100);
       document.getElementById("results").classList.remove("hidden");
 
+      renderResults(result);
+    }
+
+    function renderResults(result) {
       const tbody = document.querySelector("#results-table tbody");
       tbody.innerHTML = "";
 
@@ -175,6 +184,46 @@
       downloadBtn.onclick = () => {
         window.location.href = `/download-all/${result.session}`;
       };
+
+      renderPagination(result.currentPage, result.totalPages);
+    }
+
+    function renderPagination(current, total) {
+      currentPage = current;
+      const container = document.getElementById("pagination");
+      container.innerHTML = "";
+
+      if (total <= 1) return;
+
+      const createButton = (label, page) => {
+        const btn = document.createElement("button");
+        btn.textContent = label;
+        btn.className = "px-3 py-1 bg-gray-200 rounded hover:bg-blue-500 hover:text-white";
+        btn.onclick = () => {
+          currentPage = page;
+          fetchResults();
+        };
+        return btn;
+      };
+
+      if (current > 1) {
+        container.appendChild(createButton("Previous", current - 1));
+      }
+
+      const pageInfo = document.createElement("span");
+      pageInfo.textContent = `Page ${current} of ${total}`;
+      pageInfo.className = "px-3 py-1 text-gray-700 font-medium";
+      container.appendChild(pageInfo);
+
+      if (current < total) {
+        container.appendChild(createButton("Next", current + 1));
+      }
+    }
+
+    document.getElementById("upload-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      currentPage = 1;
+      fetchResults();
     });
   </script>
 </body>
