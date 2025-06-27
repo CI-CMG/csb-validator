@@ -1,41 +1,71 @@
 from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-from csb_validator.validator_crowbar import run_custom_validation
-from csb_validator.validator_trusted import run_trusted_node_validation
+from fastapi.templating import Jinja2Templates
+from fastapi.requests import Request
 import tempfile
 import shutil
+import zipfile
 import os
-import asyncio
+import uuid
+from csb_validator.runner import main_async
 
-app = FastAPI(title="CSB Validator API", version="1.0.0")
+app = FastAPI()
 
-# Serve the static HTML frontend
 app.mount("/static", StaticFiles(directory="csb_validator_api/static"), name="static")
+templates = Jinja2Templates(directory="csb_validator_api/templates")
 
-@app.get("/", response_class=HTMLResponse)
-def index():
-    with open("csb_validator_api/static/index.html", "r", encoding="utf-8") as f:
-        return f.read()
+
+@app.get("/")
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
 
 @app.post("/validate")
-async def validate_file(
+async def validate(
+    request: Request,
     file: UploadFile = File(...),
-    mode: str = Form("crowbar"),
-    schema_version: str = Form(None)
+    mode: str = Form(...),
+    schema_version: str = Form(""),
+    page: int = Form(1),
+    page_size: int = Form(100)
 ):
-    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp:
-        shutil.copyfileobj(file.file, tmp)
-        tmp_path = tmp.name
+    session_id = str(uuid.uuid4())
+    session_dir = os.path.join(tempfile.gettempdir(), session_id)
+    os.makedirs(session_dir, exist_ok=True)
 
-    try:
-        if mode == "trusted-node":
-            result = await run_trusted_node_validation(tmp_path, schema_version)
-        else:
-            result = await asyncio.to_thread(run_custom_validation, tmp_path)
-        os.unlink(tmp_path)
-        return JSONResponse(content={"file": result[0], "errors": result[1]}, status_code=200)
-    except Exception as e:
-        if os.path.exists(tmp_path):
-            os.unlink(tmp_path)
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+    file_path = os.path.join(session_dir, file.filename)
+    with open(file_path, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+
+    # If ZIP, extract and collect all valid files recursively
+    if file.filename.lower().endswith(".zip"):
+        with zipfile.ZipFile(file_path, "r") as zip_ref:
+            zip_ref.extractall(session_dir)
+
+        files_to_validate = []
+        for root, _, filenames in os.walk(session_dir):
+            for f in filenames:
+                if f.endswith((".geojson", ".xyz", ".json")):
+                    files_to_validate.append(os.path.join(root, f))
+    else:
+        files_to_validate = [file_path]
+
+    print(f"Found {len(files_to_validate)} files to validate...")
+
+    result = await main_async(
+        files=files_to_validate,
+        mode=mode,
+        schema_version=schema_version,
+        page=page,
+        page_size=page_size
+    )
+
+    return JSONResponse(content={
+        "errors": result["errors"],
+        "totalErrors": result["total_errors"],
+        "totalPages": result["total_pages"],
+        "currentPage": result["current_page"],
+        "pageSize": result["page_size"],
+        "session": session_id
+    })
