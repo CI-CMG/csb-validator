@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSB Validator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <div class="max-w-5xl mx-auto py-10 px-4">
+<div class="flex flex-col items-center justify-center mb-10 text-center">
+  <img src="/static/logo.png" alt="CSB Validator Logo" class="h-12 mb-3" />
+  <h1 class="text-4xl font-bold text-gray-800">CSB Validator</h1>
+  <p class="text-gray-500 mt-1">Validate your CSB files before submission</p>
+</div>
+
+    <form id="upload-form" class="bg-white rounded shadow p-6 border border-gray-200" aria-label="Upload form">
+      <label for="file-input" class="block mb-2 font-semibold">Upload a .geojson, .xyz or .zip:</label>
+      <div id="drop-zone" class="mb-4 border-2 border-dashed rounded p-6 text-center text-gray-500 cursor-pointer hover:border-blue-500 relative" aria-label="Drag and drop zone">
+        <span id="drop-zone-text">Drag and drop file here or click to select</span>
+        <span id="file-name" class="absolute inset-0 flex items-center justify-center text-gray-700 font-medium hidden"></span>
+        <input type="file" name="file" class="hidden" id="file-input" required aria-required="true" />
+      </div>
+
+      <label for="mode" class="block mb-2 font-semibold">Validation Mode:</label>
+      <select id="mode" name="mode" class="mb-4 border rounded px-2 py-1">
+        <option value="crowbar">Crowbar</option>
+        <option value="trusted-node">Trusted Node</option>
+      </select>
+
+      <input id="schema_version" name="schema_version" placeholder="Schema Version (optional)" class="mb-4 border rounded px-2 py-1 w-full" />
+      <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Validate</button>
+    </form>
+
+    <div id="progress" class="mt-6 hidden">
+      <div class="text-blue-600 font-semibold mb-1">Validating... <span id="progress-percent">0%</span></div>
+      <div class="w-full bg-gray-200 rounded-full h-4">
+        <div id="progress-bar" class="bg-blue-600 h-4 rounded-full transition-all duration-300 ease-out" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <div id="results" class="mt-8 hidden">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Validation Results</h2>
+        <div class="flex items-center space-x-4">
+          <label for="filterInput" class="text-sm font-medium">Filter by filename:</label>
+          <input id="filterInput" type="text" class="border rounded px-2 py-1" placeholder="Search..." oninput="filterResults()" aria-label="Filter results"/>
+        </div>
+      </div>
+      <div id="results-table" class="overflow-x-auto" role="table" aria-label="Validation results table">
+        <table class="min-w-full text-sm border" role="grid" data-sort-order="asc">
+          <thead class="bg-gray-100 text-left">
+            <tr>
+              <th onclick="sortTableByColumn(0)" class="cursor-pointer px-3 py-2 border" scope="col">File</th>
+              <th onclick="sortTableByColumn(1)" class="cursor-pointer px-3 py-2 border" scope="col">Line</th>
+              <th onclick="sortTableByColumn(2)" class="cursor-pointer px-3 py-2 border" scope="col">Error</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="mt-4 flex justify-between items-center">
+        <button id="download-btn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 hidden">Download All Errors</button>
+        <div id="pagination" class="flex space-x-2"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("file-input");
+    const dropZone = document.getElementById("drop-zone");
+    const dropZoneText = document.getElementById("drop-zone-text");
+    const fileNameDisplay = document.getElementById("file-name");
+
+    let currentPage = 1;
+    const pageSize = 25;
+
+    dropZone.addEventListener("click", () => fileInput.click());
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files[0];
+      if (file) {
+        dropZoneText.classList.add("hidden");
+        fileNameDisplay.textContent = file.name;
+        fileNameDisplay.classList.remove("hidden");
+      } else {
+        dropZoneText.classList.remove("hidden");
+        fileNameDisplay.classList.add("hidden");
+      }
+    });
+
+    function filterResults() {
+      const input = document.getElementById("filterInput").value.toLowerCase();
+      const rows = document.querySelectorAll("#results-table tbody tr");
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(input) ? "" : "none";
+      });
+    }
+
+    function updateProgressBar(percent) {
+      const progressBar = document.getElementById("progress-bar");
+      const progressPercent = document.getElementById("progress-percent");
+      progressBar.style.width = `${percent}%`;
+      progressBar.setAttribute("aria-valuenow", percent);
+      progressPercent.textContent = `${percent}%`;
+    }
+
+    function sortTableByColumn(index) {
+      const table = document.querySelector("#results-table table");
+      if (!table) return;
+      const tbody = table.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      const ascending = table.dataset.sortOrder !== "asc";
+
+      const sorted = rows.sort((a, b) => {
+        const aText = a.cells[index]?.textContent?.trim().toLowerCase() || "";
+        const bText = b.cells[index]?.textContent?.trim().toLowerCase() || "";
+        return ascending ? aText.localeCompare(bText) : bText.localeCompare(aText);
+      });
+
+      tbody.innerHTML = "";
+      sorted.forEach(row => tbody.appendChild(row));
+      table.dataset.sortOrder = ascending ? "asc" : "desc";
+
+      const headers = table.querySelectorAll("th");
+      headers.forEach((th, i) => {
+        th.setAttribute("aria-sort", i === index ? (ascending ? "ascending" : "descending") : "none");
+      });
+    }
+
+    async function fetchResults() {
+      const file = fileInput.files[0];
+      if (!file) return;
+
+      document.getElementById("progress").classList.remove("hidden");
+      updateProgressBar(25);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("mode", document.getElementById("mode").value);
+      formData.append("schema_version", document.getElementById("schema_version").value);
+      formData.append("page", currentPage);
+      formData.append("page_size", pageSize);
+
+      updateProgressBar(50);
+
+      const res = await fetch("/validate", {
+        method: "POST",
+        body: formData,
+      });
+
+      updateProgressBar(75);
+      const result = await res.json();
+      console.log("Server response:", result);
+
+      updateProgressBar(100);
+      document.getElementById("results").classList.remove("hidden");
+
+      renderResults(result);
+    }
+
+    function renderResults(result) {
+      const tbody = document.querySelector("#results-table tbody");
+      tbody.innerHTML = "";
+
+      if (result.errors && result.errors.length > 0) {
+        for (const err of result.errors) {
+          const row = document.createElement("tr");
+          row.className = "border-t hover:bg-gray-50";
+          row.innerHTML = `
+            <td class="px-3 py-2">${err.file.split("/").pop()}</td>
+            <td class="px-3 py-2">${err.line || ""}</td>
+            <td class="px-3 py-2">${err.error}</td>`;
+          tbody.appendChild(row);
+        }
+      } else {
+        const row = document.createElement("tr");
+        row.innerHTML = `<td colspan="3" class="px-3 py-2 text-center text-gray-500">No validation errors found.</td>`;
+        tbody.appendChild(row);
+      }
+
+      const downloadBtn = document.getElementById("download-btn");
+      downloadBtn.classList.remove("hidden");
+      downloadBtn.onclick = () => {
+        window.location.href = `/download-all/${result.session}`;
+      };
+
+      renderPagination(result.currentPage, result.totalPages);
+    }
+
+    function renderPagination(current, total) {
+      currentPage = current;
+      const container = document.getElementById("pagination");
+      container.innerHTML = "";
+
+      if (total <= 1) return;
+
+      const createButton = (label, page) => {
+        const btn = document.createElement("button");
+        btn.textContent = label;
+        btn.className = "px-3 py-1 bg-gray-200 rounded hover:bg-blue-500 hover:text-white";
+        btn.onclick = () => {
+          currentPage = page;
+          fetchResults();
+        };
+        return btn;
+      };
+
+      if (current > 1) {
+        container.appendChild(createButton("Previous", current - 1));
+      }
+
+      const pageInfo = document.createElement("span");
+      pageInfo.textContent = `Page ${current} of ${total}`;
+      pageInfo.className = "px-3 py-1 text-gray-700 font-medium";
+      container.appendChild(pageInfo);
+
+      if (current < total) {
+        container.appendChild(createButton("Next", current + 1));
+      }
+    }
+
+    document.getElementById("upload-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      currentPage = 1;
+      fetchResults();
+    });
+  </script>
+</body>
+</html>
